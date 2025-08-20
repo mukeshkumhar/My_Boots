@@ -1,5 +1,8 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flutter/material.dart'; // Or cupertino.dart
+import 'package:flutter/material.dart';
+import 'package:my_boots/Pages/product_details_page.dart';
+import '../widgets/product_card.dart';
+import '../widgets/category_slider.dart'; // Or cupertino.dart
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -32,10 +35,30 @@ class _HomePageState extends State<HomePage> {
     ),
   ];
 
+  // NEW: categories + selected value
+  final categories = const ['All', 'Running', 'Sneakers', 'Formal', 'Casual'];
+  String selectedCategory = 'All';
+
+  final List<Product> allProducts = [
+    Product('Air Max 97', 20.99, 'assets/images/yellow_shoe.png', 'Running'),
+    Product('React Presto', 25.99, 'assets/images/blue1.png', 'Sneakers'),
+    Product('Oxford Pro', 35.49, 'assets/images/green1.png', 'Formal'),
+    Product('City Casual', 22.00, 'assets/images/blue1.png', 'Casual'),
+    Product('Marathon Fly', 28.50, 'assets/images/yellow_shoe.png', 'Running'),
+    Product('Street Low', 19.99, 'assets/images/green1.png', 'Sneakers'),
+  ];
+
+  List<Product> get filtered =>
+      selectedCategory == 'All'
+          ? allProducts
+          : allProducts.where((p) => p.category == selectedCategory).toList();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
+      // App Bar
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: Container(
@@ -99,6 +122,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+
+      // Body
       body: Column(
         children: [
           const SizedBox(height: 24),
@@ -106,7 +131,7 @@ class _HomePageState extends State<HomePage> {
             items: _cards,
             options: CarouselOptions(
               height: 160,
-              autoPlay: false,
+              autoPlay: true,
               enlargeCenterPage: true,
               viewportFraction: 0.9,
               onPageChanged: (index, reason) {
@@ -132,11 +157,52 @@ class _HomePageState extends State<HomePage> {
                   );
                 }).toList(),
           ),
+          const SizedBox(height: 15),
+
+          CategorySlider(
+            categories: categories,
+            onChanged: (_, label) {
+              setState(() => selectedCategory = label);
+              // TODO: trigger your product filter here
+              // e.g., call Provider/Bloc or filter a local list
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // ===== Product grid (fills remaining space) =====
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.7,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: filtered.length,
+              itemBuilder:
+                  (_, i) => ProductCard(
+                    product: filtered[i],
+                    onTap: () {
+                      // TODO: Navigate to details or add to cart
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => ProductDetailsPage(product: filtered[i]),
+                        ),
+                      );
+                    },
+                  ),
+            ),
+          ),
         ],
       ),
     ); // Placeholder, you'll replace this
   }
 }
+
+// Auto scroll slider
 
 class _PromoCard extends StatelessWidget {
   final String title;
@@ -154,7 +220,7 @@ class _PromoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 6),
+      // margin: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: Colors.black12,
         borderRadius: BorderRadius.circular(18),
@@ -173,13 +239,15 @@ class _PromoCard extends StatelessWidget {
             right: 0,
             top: 0,
             bottom: 0,
-            child: Image.asset(image, width: 230, fit: BoxFit.fitHeight),
+            child: Image.asset(image, width: 200, fit: BoxFit.fitHeight),
           ),
           // Text & button on the left
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 180, 16),
+            padding: const EdgeInsets.fromLTRB(20, 29, 170, 20),
+
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   title,
@@ -188,7 +256,7 @@ class _PromoCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 0),
+                // const SizedBox(height: 0),
                 Text(
                   subtitle,
                   style: const TextStyle(fontSize: 14, color: Colors.black87),
