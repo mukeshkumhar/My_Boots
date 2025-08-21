@@ -122,7 +122,7 @@ class _SizeColumn extends StatelessWidget {
 }
 
 class _RightControls extends StatelessWidget {
-  const _RightControls({super.key});
+  const _RightControls();
 
   Widget _swatch(Color c) => Container(
     margin: const EdgeInsets.only(top: 10),

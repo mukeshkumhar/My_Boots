@@ -1,6 +1,9 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:my_boots/Pages/cart_page.dart';
+import 'package:my_boots/Pages/favorites_page.dart';
 import 'package:my_boots/Pages/product_details_page.dart';
+import 'package:my_boots/Pages/profile_page.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_slider.dart'; // Or cupertino.dart
 
@@ -13,6 +16,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _current = 0;
+  int _currentIndex = 0;
 
   final List<Widget> _cards = [
     _PromoCard(
@@ -40,12 +44,12 @@ class _HomePageState extends State<HomePage> {
   String selectedCategory = 'All';
 
   final List<Product> allProducts = [
-    Product('Air Max 97', 20.99, 'assets/images/yellow_shoe.png', 'Running'),
-    Product('React Presto', 25.99, 'assets/images/blue1.png', 'Sneakers'),
-    Product('Oxford Pro', 35.49, 'assets/images/green1.png', 'Formal'),
-    Product('City Casual', 22.00, 'assets/images/blue1.png', 'Casual'),
-    Product('Marathon Fly', 28.50, 'assets/images/yellow_shoe.png', 'Running'),
-    Product('Street Low', 19.99, 'assets/images/green1.png', 'Sneakers'),
+    Product('Air Max 97', 2099, 'assets/images/yellow_shoe.png', 'Running'),
+    Product('React Presto', 2599, 'assets/images/blue1.png', 'Sneakers'),
+    Product('Oxford Pro', 3549, 'assets/images/green1.png', 'Formal'),
+    Product('City Casual', 2200, 'assets/images/blue1.png', 'Casual'),
+    Product('Marathon Fly', 2899, 'assets/images/yellow_shoe.png', 'Running'),
+    Product('Street Low', 1999, 'assets/images/green1.png', 'Sneakers'),
   ];
 
   List<Product> get filtered =>
@@ -55,6 +59,13 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final page = [
+      const HomePage(),
+      const FavoritesPage(),
+      const CartPage(),
+      const ProfilePage(),
+    ];
+
     return Scaffold(
       backgroundColor: Colors.white,
 
@@ -195,6 +206,29 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
             ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed, // keeps labels visible
+        currentIndex: _currentIndex,
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white,
+        onTap: (i) => setState(() => _currentIndex = i),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_border),
+            label: "Favorites",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart_outlined),
+            label: "Cart",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: "Profile",
           ),
         ],
       ),

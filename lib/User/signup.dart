@@ -10,7 +10,7 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-  bool _loading = false;
+  final bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
