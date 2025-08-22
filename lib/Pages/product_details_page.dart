@@ -19,32 +19,32 @@ class ProductDetailsPage extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
-                  );
-                },
-                child: Container(
-                  // Your existing styled container
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.black12),
-                    color: Colors.white,
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Icon(Icons.arrow_back, size: 20),
-                ),
-              ),
-              SizedBox(width: 10),
+              // GestureDetector(
+              //   onTap: () {
+              //     Navigator.pushReplacement(
+              //       context,
+              //       MaterialPageRoute(builder: (context) => HomePage()),
+              //     );
+              //   },
+              //   child: Container(
+              //     // Your existing styled container
+              //     padding: const EdgeInsets.all(10),
+              //     decoration: BoxDecoration(
+              //       borderRadius: BorderRadius.circular(10),
+              //       border: Border.all(color: Colors.black12),
+              //       color: Colors.white,
+              //       boxShadow: const [
+              //         BoxShadow(
+              //           color: Colors.black12,
+              //           blurRadius: 8,
+              //           offset: Offset(0, 2),
+              //         ),
+              //       ],
+              //     ),
+              //     child: Icon(Icons.arrow_back, size: 20),
+              //   ),
+              // ),
+              // SizedBox(width: 10),
               Spacer(),
               Text(
                 product.category,

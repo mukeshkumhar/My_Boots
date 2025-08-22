@@ -32,6 +32,11 @@ dependencies:
     sdk: flutter
   carousel_slider: ^5.0.0
   flutter_dotenv: ^5.1.0
+  flutter_launcher_icons: ^0.13.1
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/nike.png"
 
 
   # The following adds the Cupertino Icons font to your application.
