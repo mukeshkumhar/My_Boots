@@ -33,10 +33,15 @@ dependencies:
   carousel_slider: ^5.0.0
   flutter_dotenv: ^5.1.0
   flutter_launcher_icons: ^0.13.1
-flutter_icons:
+
+
+flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icons/nike.png"
+  image_path: "assets/icons/nike_logo.png"
+#  asaptive_icon_forground: ""
+#  asaptive_icon_background: ""
+# dart run flutter_launcher_icons ---run this code to generate icons
 
 
   # The following adds the Cupertino Icons font to your application.

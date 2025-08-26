@@ -20,31 +20,38 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _checkLoginStatusAndNavigate() async {
     // Simulate a delay for the splash screen
     await Future.delayed(const Duration(seconds: 2));
-    Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginPage())
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.blue, // Example splash screen background
-        body: Center(
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const <Widget>[
-                FlutterLogo(size: 100.0), // Example: Your app logo
-                SizedBox(height: 20),
-                Text('My Awesome App',
-                    style: TextStyle(fontSize: 24,color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                  SizedBox(height: 20),
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ],
+      backgroundColor: Colors.blue, // Example splash screen background
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              child: Image.asset('assets/icons/nike_logo.png'),
+            ), // Example: Your app logo
+            SizedBox(height: 20),
+            Text(
+              'My Awesome App',
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
+            SizedBox(height: 20),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ],
         ),
+      ),
     );
   }
 }
