@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import './User/splash_screen.dart';
+import 'core/auth_controller.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AuthController(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -20,5 +27,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-

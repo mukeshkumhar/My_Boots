@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:my_boots/Pages/home.dart';
-import 'package:my_boots/User/signup.dart'; // Or cupertino.dart
+import 'package:my_boots/User/signup.dart';
+import 'package:provider/provider.dart';
+
+import '../core/auth_controller.dart'; // Or cupertino.dart
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,48 +15,44 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailget = TextEditingController();
   final _passget = TextEditingController();
-  bool _loading = false;
-  final email = "mukesh@gmail.com";
-  final password = "1234";
 
   @override
-  void despose() {
+  void dispose() {
     _emailget.dispose();
     _passget.dispose();
     super.dispose();
   }
 
-  void performlogin() {
+  Future<void> performlogin() async {
     print("Login Clicked");
-    setState(() {
-      _loading = true;
-    });
-    print("Email: ${_emailget.text} Password: ${_passget.text}");
-    print("Email: ${_emailget.text} Password: ${_passget.text}");
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const HomePage()),
-    );
-
-    // if (email == _emailget.text && password == _passget.text) {
-    //   Navigator.pushReplacement(
-    //     context,
-    //     MaterialPageRoute(builder: (context) => const HomePage()),
-    //   );
-    // } else {
-    //   setState(() {
-    //     _loading = false;
-    //   });
-    //   print("Login Failed");
-    // }
-
-    _loading = false;
+    if (_emailget.text.isEmpty || _passget.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('email or password cannot be empty')),
+      );
+      return;
+    }
+    try {
+      final response = await context.read<AuthController>().doLogin(
+        _emailget.text.trim(),
+        _passget.text,
+      );
+      print(response?['username'] as String);
+      if (response != null && mounted) {
+        Navigator.of(
+          context,
+        ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
+      }
+    } catch (e) {
+      print("Login Failed: $e");
+      final msg = context.read<AuthController>().error ?? 'Login failed';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+    final auth = context.watch<AuthController>();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -140,9 +139,9 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 40),
                 GestureDetector(
-                  onTap: _loading ? null : performlogin,
+                  onTap: auth.loading ? null : performlogin,
                   child:
-                      _loading
+                      auth.loading
                           ? const CircularProgressIndicator()
                           : Container(
                             height: 50,
@@ -163,37 +162,37 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                 ),
-                SizedBox(height: 20),
-                GestureDetector(
-                  child: Container(
-                    height: 50,
-                    margin: const EdgeInsets.symmetric(horizontal: 60),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(50),
-                      color: Colors.black,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Center(
-                          child: Image.asset(
-                            'assets/icons/google_icon.png',
-                            width: 24,
-                            height: 24,
-                          ),
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ), // Space between icon and text
-                        const Text(
-                          // The text was missing from your snippet
-                          "Login with Google", // Or "Sign in with Google"
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // SizedBox(height: 20),
+                // GestureDetector(
+                //   child: Container(
+                //     height: 50,
+                //     margin: const EdgeInsets.symmetric(horizontal: 60),
+                //     decoration: BoxDecoration(
+                //       borderRadius: BorderRadius.circular(50),
+                //       color: Colors.black,
+                //     ),
+                //     child: Row(
+                //       mainAxisAlignment: MainAxisAlignment.center,
+                //       children: [
+                //         Center(
+                //           child: Image.asset(
+                //             'assets/icons/google_icon.png',
+                //             width: 24,
+                //             height: 24,
+                //           ),
+                //         ),
+                //         const SizedBox(
+                //           width: 10,
+                //         ), // Space between icon and text
+                //         const Text(
+                //           // The text was missing from your snippet
+                //           "Login with Google", // Or "Sign in with Google"
+                //           style: TextStyle(color: Colors.white),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
+                // ),
                 const SizedBox(height: 20),
                 Center(
                   child: GestureDetector(
