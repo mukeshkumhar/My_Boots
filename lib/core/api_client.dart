@@ -26,23 +26,23 @@ class ApiClient {
       ),
     );
 
-    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-      final client = HttpClient();
-      client.badCertificateCallback =
-          (cert, host, port) => false; // keep strict
-      return client;
-    };
+    // (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+    //   final client = HttpClient();
+    //   client.badCertificateCallback =
+    //       (cert, host, port) => false; // keep strict
+    //   return client;
+    // };
 
     // 🔎 Simple logger
-    dio.interceptors.add(
-      LogInterceptor(
-        request: true,
-        requestBody: true,
-        responseBody: true,
-        responseHeader: false,
-        error: true,
-      ),
-    );
+    // dio.interceptors.add(
+    //   LogInterceptor(
+    //     request: true,
+    //     requestBody: true,
+    //     responseBody: true,
+    //     responseHeader: false,
+    //     error: true,
+    //   ),
+    // );
 
     dio.interceptors.add(
       InterceptorsWrapper(
@@ -58,9 +58,9 @@ class ApiClient {
               !_isAuthEndpoint(e.requestOptions.path)) {
             _queue.add(QueuedRequest(e.requestOptions, handler));
             await _attemptRefreshAndReplay();
-          } else {
-            handler.next(e);
+            return;
           }
+          handler.next(e);
         },
       ),
     );
@@ -69,7 +69,7 @@ class ApiClient {
   bool _isAuthEndpoint(String path) =>
       path.contains('/user/login') ||
       path.contains('/user/register') ||
-      path.contains('/user/refresh');
+      path.contains('/user/me');
 
   Future<void> _attemptRefreshAndReplay() async {
     if (_refreshing) return;
@@ -77,7 +77,7 @@ class ApiClient {
 
     try {
       final refresh = await TokenStore.refreshToken;
-      if (refresh == null) throw 'No refresh token';
+      if (refresh == null || refresh.isEmpty) throw 'No refresh token';
       final resp = await dio.post(
         '/user/refresh',
         data: {'refreshToken': refresh},

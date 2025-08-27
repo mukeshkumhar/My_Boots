@@ -1,7 +1,10 @@
 // lib/splash_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../Pages/home.dart';
 import '../User/login.dart';
+import '../core/auth_controller.dart';
+import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,10 +22,18 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkLoginStatusAndNavigate() async {
     // Simulate a delay for the splash screen
+    final auth = context.read<AuthController>();
+    await auth.initAndValidate();
+    if (!mounted) return;
+    final goHome = auth.currentUser != null;
+
     await Future.delayed(const Duration(seconds: 2));
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()));
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => goHome ? const HomePage() : const LoginPage(),
+      ),
+      (_) => false,
+    );
   }
 
   @override

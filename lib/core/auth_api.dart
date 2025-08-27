@@ -1,5 +1,6 @@
 // lib/features/auth/auth_api.dart
 import 'package:dio/dio.dart';
+import '../models/user_model.dart';
 import 'api_client.dart';
 import 'token_store.dart';
 import 'api_error.dart';
@@ -8,7 +9,7 @@ class AuthApi {
   final _dio = ApiClient().dio;
 
   // Login api
-  Future<Map<String, dynamic>> login({
+  Future<AppUser> login({
     required String email,
     required String password,
   }) async {
@@ -38,10 +39,14 @@ class AuthApi {
       }
 
       final userRaw = data['user'];
-      if (userRaw is Map) {
-        return Map<String, dynamic>.from(userRaw);
+      if (userRaw is! Map) {
+        throw ApiError('Server did not return user object', res.statusCode);
       }
-      throw ApiError('Server did not return user object', res.statusCode);
+      return AppUser.fromJson(Map<String, dynamic>.from(userRaw));
+      // if (userRaw is Map) {
+      //   return Map<String, dynamic>.from(userRaw);
+      // }
+      // throw ApiError('Server did not return user object', res.statusCode);
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       final msg =
@@ -54,7 +59,7 @@ class AuthApi {
 
   // register api
 
-  Future<Map<String, dynamic>> register({
+  Future<AppUser> register({
     required String username,
     required String email,
     required String password,
@@ -88,10 +93,14 @@ class AuthApi {
         );
       }
       final userRaw = data['user'];
-      if (userRaw is Map) {
-        return Map<String, dynamic>.from(userRaw);
+      if (userRaw is! Map) {
+        throw ApiError('Server did not return user object', res.statusCode);
       }
-      throw ApiError('Server did not return user object', res.statusCode);
+      return AppUser.fromJson(Map<String, dynamic>.from(userRaw));
+      // if (userRaw is Map) {
+      //   return Map<String, dynamic>.from(userRaw);
+      // }
+      // throw ApiError('Server did not return user object', res.statusCode);
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       final msg =
@@ -102,9 +111,13 @@ class AuthApi {
     }
   }
 
-  Future<Map<String, dynamic>> me() async {
-    final res = await _dio.get('/user/home');
-    return Map<String, dynamic>.from(res.data['user']);
+  Future<AppUser> me() async {
+    final res = await _dio.get('/user/me');
+    final data = res.data;
+    if (data is Map && data['user'] is Map) {
+      return AppUser.fromJson(Map<String, dynamic>.from(data['user']));
+    }
+    throw ApiError('Invalid /me response', res.statusCode);
   }
 
   Future<void> logout() async {

@@ -4,12 +4,14 @@ class AppUser {
   final String username;
   final String email;
   final int contact;
+  final bool admin;
 
   AppUser({
     required this.id,
     required this.username,
     required this.email,
     required this.contact,
+    required this.admin,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,10 @@ class AppUser {
           json['contact'] is int
               ? json['contact'] as int
               : int.tryParse(json['contact']?.toString() ?? '0') ?? 0,
+      admin:
+          (json['admin'] is bool)
+              ? json['admin'] as bool
+              : (json['admin']?.toString().toLowerCase() == 'true'),
     );
   }
 
@@ -29,5 +35,6 @@ class AppUser {
     'username': username,
     'email': email,
     'contact': contact,
+    'admin': admin,
   };
 }

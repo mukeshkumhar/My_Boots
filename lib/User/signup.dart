@@ -37,8 +37,8 @@ class _SignupPageState extends State<SignupPage> {
         _contactget.text,
         _passwordget.text,
       );
-      print(response?['username'] as String);
-      final admin = response?['admin'] as bool;
+      print(response.username);
+      final admin = response.admin;
 
       if (admin != true) {
         Navigator.of(

@@ -39,8 +39,8 @@ class _LoginPageState extends State<LoginPage> {
       );
       print("Login Response: $response");
       // debugPrint("Debug Response: $response");
-      print(response?['username'] as String);
-      final admin = response?['admin'] as bool;
+      print(response.username);
+      final admin = response.admin;
       if (admin != true) {
         Navigator.of(
           context,

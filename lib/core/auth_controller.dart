@@ -1,19 +1,47 @@
 // lib/features/auth/auth_controller.dart
 import 'package:flutter/foundation.dart';
+import 'package:my_boots/core/token_store.dart';
+import 'package:my_boots/models/user_model.dart';
 import '../../core/api_error.dart';
 import 'auth_api.dart';
 
 class AuthController extends ChangeNotifier {
   final _api = AuthApi();
-  Map<String, dynamic>? currentUser;
+  AppUser? currentUser;
   String? error;
   bool loading = false;
 
-  Future<Map<String, dynamic>?> doLogin(String email, String password) async {
+  Future<void> initAndValidate() async {
+    try {
+      // Load saved user (optional)
+      currentUser = await TokenStore.getUser();
+
+      final access = await TokenStore.accessToken;
+      final refresh = await TokenStore.refreshToken;
+
+      if (access != null && refresh != null) {
+        // Validate token -> /me
+        final user = await _api.me();
+        currentUser = user;
+        await TokenStore.saveUser(user);
+      } else {
+        currentUser = null;
+      }
+    } catch (_) {
+      currentUser = null;
+      await TokenStore.clear();
+    } finally {
+      // loading = true;
+      notifyListeners();
+    }
+  }
+
+  Future<AppUser> doLogin(String email, String password) async {
     _start();
     try {
       final user = await _api.login(email: email, password: password);
       currentUser = user;
+      await TokenStore.saveUser(user);
       _done();
       return user;
     } on ApiError catch (e) {
@@ -25,7 +53,7 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>?> doRegister(
+  Future<AppUser> doRegister(
     String username,
     String email,
     String contact,
@@ -40,6 +68,7 @@ class AuthController extends ChangeNotifier {
         password: password,
       );
       currentUser = user;
+      await TokenStore.saveUser(user);
       _done();
       return user;
     } on ApiError catch (e) {
@@ -66,6 +95,7 @@ class AuthController extends ChangeNotifier {
     try {
       await _api.logout();
       currentUser = null;
+      await TokenStore.clear();
       _done();
     } catch (e) {
       _fail(e);
