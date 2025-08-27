@@ -1,5 +1,6 @@
 // lib/features/auth/auth_api.dart
 import 'package:dio/dio.dart';
+import 'package:my_boots/models/products_models.dart';
 import '../models/user_model.dart';
 import 'api_client.dart';
 import 'token_store.dart';
@@ -118,6 +119,26 @@ class AuthApi {
       return AppUser.fromJson(Map<String, dynamic>.from(data['user']));
     }
     throw ApiError('Invalid /me response', res.statusCode);
+  }
+
+  Future<List<RemoteProduct>> product() async {
+    final res = await _dio.get('/user/home');
+    final data = res.data;
+    // Accept { products:[ ... ] } or a raw list [ ... ]
+    print(data);
+    List items;
+    if (data is Map && data['products'] is List) {
+      items = data['products'] as List;
+    } else if (data is List) {
+      items = data;
+    } else {
+      throw ApiError('Unexpected /user/home shape', res.statusCode);
+    }
+
+    return items
+        .whereType<Map>() // ensure each item is a Map
+        .map((m) => RemoteProduct.fromJson(Map<String, dynamic>.from(m)))
+        .toList();
   }
 
   Future<void> logout() async {

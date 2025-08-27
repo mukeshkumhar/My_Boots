@@ -1,10 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+import '../models/products_models.dart';
+
 class HeroArea extends StatelessWidget {
   const HeroArea({
     super.key,
     required this.imagePath,
+    required this.product,
     this.brandWord = 'NIKE',
     this.heroHeight = 480,
     this.shoeTiltDeg = -18,
@@ -13,6 +16,7 @@ class HeroArea extends StatelessWidget {
     this.textOpacity = 0.08,
     this.textScale = 1.0,
   });
+  final RemoteProduct product;
 
   final String imagePath;
   final String brandWord;
@@ -25,6 +29,10 @@ class HeroArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasVariant = product.variants.isNotEmpty;
+    final first = hasVariant ? product.variants.first : null;
+    final String? img =
+        (first != null && first.images.isNotEmpty) ? first.images.first : null;
     return SizedBox(
       height: heroHeight,
       width: double.infinity,
@@ -66,11 +74,37 @@ class HeroArea extends StatelessWidget {
                   angle: shoeTiltDeg * math.pi / 180, // tilt
                   child: Hero(
                     tag: imagePath,
-                    child: Image.asset(
-                      imagePath,
-                      height: heroHeight, // size control
-                      fit: BoxFit.contain,
-                    ),
+                    child:
+                        img == null || img.isEmpty
+                            ? const Icon(Icons.image_not_supported, size: 48)
+                            : ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.network(
+                                img,
+                                height: 290,
+                                fit: BoxFit.fitHeight,
+                                // small loader while downloading
+                                loadingBuilder: (
+                                  context,
+                                  child,
+                                  loadingProgress,
+                                ) {
+                                  if (loadingProgress == null) return child;
+                                  return const SizedBox(
+                                    height: 140,
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+                                },
+                                // fallback if the URL fails
+                                errorBuilder:
+                                    (context, error, stack) => const Icon(
+                                      Icons.broken_image,
+                                      size: 48,
+                                    ),
+                              ),
+                            ),
                   ),
                 ),
               ),

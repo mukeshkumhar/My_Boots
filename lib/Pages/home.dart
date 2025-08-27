@@ -4,6 +4,8 @@ import 'package:my_boots/Pages/cart_page.dart';
 import 'package:my_boots/Pages/favorites_page.dart';
 import 'package:my_boots/Pages/product_details_page.dart';
 import 'package:my_boots/Pages/profile_page.dart';
+import 'package:my_boots/core/auth_api.dart';
+import '../models/products_models.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_slider.dart'; // Or cupertino.dart
 
@@ -43,19 +45,62 @@ class _HomePageState extends State<HomePage> {
   final categories = const ['All', 'Running', 'Sneakers', 'Formal', 'Casual'];
   String selectedCategory = 'All';
 
-  final List<Product> allProducts = [
-    Product('Air Max 97', 2099, 'assets/images/yellow_shoe.png', 'Running'),
-    Product('React Presto', 2599, 'assets/images/blue1.png', 'Sneakers'),
-    Product('Oxford Pro', 3549, 'assets/images/green1.png', 'Formal'),
-    Product('City Casual', 2200, 'assets/images/blue1.png', 'Casual'),
-    Product('Marathon Fly', 2899, 'assets/images/yellow_shoe.png', 'Running'),
-    Product('Street Low', 1999, 'assets/images/green1.png', 'Sneakers'),
-  ];
+  // final List<Product> allProducts = [
+  //   Product('Air Max 97', 2099, 'assets/images/yellow_shoe.png', 'Running'),
+  //   Product('React Presto', 2599, 'assets/images/blue1.png', 'Sneakers'),
+  //   Product('Oxford Pro', 3549, 'assets/images/green1.png', 'Formal'),
+  //   Product('City Casual', 2200, 'assets/images/blue1.png', 'Casual'),
+  //   Product('Marathon Fly', 2899, 'assets/images/yellow_shoe.png', 'Running'),
+  //   Product('Street Low', 1999, 'assets/images/green1.png', 'Sneakers'),
+  // ];
 
-  List<Product> get filtered =>
-      selectedCategory == 'All'
-          ? allProducts
-          : allProducts.where((p) => p.category == selectedCategory).toList();
+  // List<Product> get filtered =>
+  //     selectedCategory == 'All'
+  //         ? allProducts
+  //         : allProducts.where((p) => p.category == selectedCategory).toList();
+
+  // New: remote products + loading state
+  final _api = AuthApi();
+  bool loading = true;
+  String? error;
+  List<RemoteProduct> products = [];
+
+  List<RemoteProduct> get filtered {
+    if (selectedCategory == 'All') return products;
+    return products.where((p) => p.category == selectedCategory).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+    try {
+      final list = await _api.product(); // GET /user/home
+      setState(() {
+        products = list;
+        loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        loading = false;
+      });
+      // Optionally show a snackbar
+      if (mounted) {
+        print('Failed to load products: $e');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load products: $e')));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

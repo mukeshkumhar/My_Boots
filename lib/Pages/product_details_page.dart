@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:my_boots/Pages/home.dart';
+import 'package:my_boots/models/products_models.dart';
 import '../widgets/hero_area.dart';
 import '../widgets/product_card.dart'; // if Product class is there
 
 class ProductDetailsPage extends StatelessWidget {
-  final Product product;
+  final RemoteProduct product;
 
   const ProductDetailsPage({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
+    final hasVariant = product.variants.isNotEmpty;
+    final first = hasVariant ? product.variants.first : null;
+    final String? img =
+        (first != null && first.images.isNotEmpty) ? first.images.first : null;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -87,7 +92,8 @@ class ProductDetailsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             HeroArea(
-              imagePath: product.image,
+              imagePath: product.variants[0].images[0],
+              product: product,
               brandWord: 'NIKE',
               heroHeight: 480, // overall section height
               shoeTiltDeg: -18, // rotate shoe

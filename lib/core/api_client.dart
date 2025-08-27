@@ -1,7 +1,5 @@
 // lib/core/api_client.dart
-import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'token_store.dart';
 import 'constants.dart';
 
@@ -69,7 +67,8 @@ class ApiClient {
   bool _isAuthEndpoint(String path) =>
       path.contains('/user/login') ||
       path.contains('/user/register') ||
-      path.contains('/user/me');
+      path.contains('/user/me') ||
+      path.contains('/user/home');
 
   Future<void> _attemptRefreshAndReplay() async {
     if (_refreshing) return;

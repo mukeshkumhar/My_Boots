@@ -1,21 +1,26 @@
 // widgets/product_card.dart
 import 'package:flutter/material.dart';
+import 'package:my_boots/models/products_models.dart';
 
-class Product {
-  final String name;
-  final double price;
-  final String image; // asset path
-  final String category; // Running, Sneakers, Formal, Casual
-  const Product(this.name, this.price, this.image, this.category);
-}
+// class Product {
+//   final String name;
+//   final double price;
+//   final String image; // asset path
+//   final String category; // Running, Sneakers, Formal, Casual
+//   const Product(this.name, this.price, this.image, this.category);
+// }
 
 class ProductCard extends StatelessWidget {
   const ProductCard({super.key, required this.product, this.onTap});
-  final Product product;
+  final RemoteProduct product;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final hasVariant = product.variants.isNotEmpty;
+    final first = hasVariant ? product.variants.first : null;
+    final String? img =
+        (first != null && first.images.isNotEmpty) ? first.images.first : null;
     return Container(
       decoration: BoxDecoration(
         color: Colors.black12,
@@ -37,16 +42,36 @@ class ProductCard extends StatelessWidget {
             SizedBox(
               height: 150,
               child: Center(
-                child: Image.asset(
-                  product.image,
-                  height: 140,
-                  fit: BoxFit.fitHeight,
-                ),
+                child:
+                    img == null || img.isEmpty
+                        ? const Icon(Icons.image_not_supported, size: 48)
+                        : ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.network(
+                            img,
+                            height: 140,
+                            fit: BoxFit.fitHeight,
+                            // small loader while downloading
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const SizedBox(
+                                height: 140,
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            },
+                            // fallback if the URL fails
+                            errorBuilder:
+                                (context, error, stack) =>
+                                    const Icon(Icons.broken_image, size: 48),
+                          ),
+                        ),
               ),
             ),
             const SizedBox(height: 1),
             Text(
-              product.name,
+              product.variants[0].price.toString(),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             // const SizedBox(height: 0),
