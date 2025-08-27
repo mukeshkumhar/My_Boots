@@ -79,7 +79,7 @@ class ApiClient {
       final refresh = await TokenStore.refreshToken;
       if (refresh == null) throw 'No refresh token';
       final resp = await dio.post(
-        '/auth/refresh',
+        '/user/refresh',
         data: {'refreshToken': refresh},
       );
       final tokens = resp.data['tokens'];

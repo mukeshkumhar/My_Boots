@@ -176,7 +176,7 @@ class _HomePageState extends State<HomePage> {
               setState(() => selectedCategory = label);
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
           // --- Product grid (now NON-scrollable; page scrolls instead) ---
           GridView.builder(
@@ -263,18 +263,18 @@ class _PromoCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 29, 170, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
+              // mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  style: const TextStyle(fontSize: 12, color: Colors.black87),
                 ),
                 const Spacer(),
                 ElevatedButton(
@@ -284,7 +284,7 @@ class _PromoCard extends StatelessWidget {
                     foregroundColor: Colors.white,
                     shape: const StadiumBorder(),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 30,
+                      horizontal: 25,
                       vertical: 5,
                     ),
                   ),

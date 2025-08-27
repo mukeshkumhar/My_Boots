@@ -37,11 +37,18 @@ class _LoginPageState extends State<LoginPage> {
         _emailget.text.trim(),
         _passget.text,
       );
+      print("Login Response: $response");
+      // debugPrint("Debug Response: $response");
       print(response?['username'] as String);
-      if (response != null && mounted) {
+      final admin = response?['admin'] as bool;
+      if (admin != true) {
         Navigator.of(
           context,
         ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("You are not user")));
       }
     } catch (e) {
       print("Login Failed: $e");

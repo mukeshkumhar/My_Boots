@@ -35,7 +35,7 @@ class ProductCard extends StatelessWidget {
           children: [
             // image
             SizedBox(
-              height: 160,
+              height: 150,
               child: Center(
                 child: Image.asset(
                   product.image,
@@ -55,7 +55,7 @@ class ProductCard extends StatelessWidget {
                 Text(
                   '\$${product.price.toStringAsFixed(2)}',
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
