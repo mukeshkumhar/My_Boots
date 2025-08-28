@@ -48,7 +48,7 @@ class HeroArea extends StatelessWidget {
                 child: Transform.rotate(
                   angle: 90 * math.pi / 180, // 90° CCW
                   child: Text(
-                    brandWord,
+                    product.brand,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       // very large, then scaled by FittedBox and textScale
