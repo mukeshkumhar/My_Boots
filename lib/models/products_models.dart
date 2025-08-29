@@ -1,8 +1,9 @@
-// lib/features/products/product_models.dart
+// lib/models/products_models.dart  (or your features path)
+
 class ProductVariant {
   final List<String> images;
   final String color;
-  final String size;
+  final List<String> sizes; // always strings in UI
   final int mrp;
   final int price;
   final bool inStock;
@@ -10,20 +11,31 @@ class ProductVariant {
   ProductVariant({
     required this.images,
     required this.color,
-    required this.size,
+    required this.sizes,
     required this.mrp,
     required this.price,
     required this.inStock,
   });
 
-  factory ProductVariant.fromJson(Map<String, dynamic> j) => ProductVariant(
-    images: (j['images'] as List? ?? []).map((e) => e.toString()).toList(),
-    color: (j['color'] ?? '').toString(),
-    size: (j['size'] ?? '').toString(),
-    mrp: (j['mrp'] ?? 0) as int,
-    price: (j['price'] ?? 0) as int,
-    inStock: (j['inStock'] ?? false) as bool,
-  );
+  factory ProductVariant.fromJson(Map<String, dynamic> j) {
+    // size can be number, string, or list -> normalize to List<String>
+    final rawSize = j['size'] ?? j['sizes'];
+    final sizes =
+        (rawSize is List)
+            ? rawSize.map((e) => e.toString()).toList()
+            : rawSize != null
+            ? <String>[rawSize.toString()]
+            : <String>[];
+
+    return ProductVariant(
+      images: (j['images'] as List? ?? []).map((e) => e.toString()).toList(),
+      color: (j['color'] ?? '').toString(),
+      sizes: sizes,
+      mrp: _asInt(j['mrp']),
+      price: _asInt(j['price']),
+      inStock: j['inStock'] == true,
+    );
+  }
 }
 
 class RemoteProduct {
@@ -67,7 +79,16 @@ class RemoteProduct {
     material: (j['material'] ?? '').toString(),
     variants:
         (j['variant'] as List? ?? [])
+            .whereType<Map>()
             .map((v) => ProductVariant.fromJson(Map<String, dynamic>.from(v)))
             .toList(),
   );
+}
+
+// ---- helper for ints from num/string
+int _asInt(dynamic v) {
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v) ?? 0;
+  return 0;
 }

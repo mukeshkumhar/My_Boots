@@ -13,53 +13,42 @@ class ProductDetailsPage extends StatefulWidget {
 }
 
 class _ProductDetailsPageState extends State<ProductDetailsPage> {
-  int selectedVariant = 0; // which variant is active (color+size combo)
-  int currentImage = 0; // which image inside the active variant
+  int selectedVariant = 0; // which color/variant
+  int currentImage = 0; // which image for the variant
+  String? selectedSize; // <- NEW: selected size as String
 
-  // ---- helpers to switch by color or size (pick first matching) ----
+  // Normalize sizes from variant.size (supports int | String | List)
+  List<String> _sizesOf(dynamic variant) {
+    final raw = variant.sizes;
+    if (raw is List) return raw.map((e) => e.toString()).toList();
+    return [raw.toString()];
+  }
+
+  // Tap color: switch variant, keep size if available, else first size
   void _selectByColor(String color) {
     final variants = widget.product.variants;
-    final curSize = variants[selectedVariant].size;
-    // try same size + new color first, else first matching color
-    final idxSameSize = variants.indexWhere(
-      (v) =>
-          v.color.toLowerCase() == color.toLowerCase() &&
-          v.size.toLowerCase() == curSize.toLowerCase(),
+    final cur = variants[selectedVariant];
+    final curSize = selectedSize ?? _sizesOf(cur).first;
+
+    final idx = variants.indexWhere(
+      (v) => v.color.toLowerCase() == color.toLowerCase(),
     );
-    final idxAny =
-        idxSameSize != -1
-            ? idxSameSize
-            : variants.indexWhere(
-              (v) => v.color.toLowerCase() == color.toLowerCase(),
-            );
-    if (idxAny != -1) {
+    if (idx != -1) {
+      final newV = variants[idx];
+      final newVSizes = _sizesOf(newV);
       setState(() {
-        selectedVariant = idxAny;
+        selectedVariant = idx;
         currentImage = 0;
+        selectedSize = newVSizes.contains(curSize) ? curSize : newVSizes.first;
       });
     }
   }
 
+  // Tap size: just change the size for the current variant
   void _selectBySize(String size) {
-    final variants = widget.product.variants;
-    final curColor = variants[selectedVariant].color;
-    // try same color + new size first, else first matching size
-    final idxSameColor = variants.indexWhere(
-      (v) =>
-          v.size.toLowerCase() == size.toLowerCase() &&
-          v.color.toLowerCase() == curColor.toLowerCase(),
-    );
-    final idxAny =
-        idxSameColor != -1
-            ? idxSameColor
-            : variants.indexWhere(
-              (v) => v.size.toLowerCase() == size.toLowerCase(),
-            );
-    if (idxAny != -1) {
-      setState(() {
-        selectedVariant = idxAny;
-        currentImage = 0;
-      });
+    final vSizes = _sizesOf(widget.product.variants[selectedVariant]);
+    if (vSizes.contains(size)) {
+      setState(() => selectedSize = size);
     }
   }
 
@@ -75,10 +64,11 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
     final v = variants[selectedVariant];
     final images = v.images;
+    final vSizes = _sizesOf(v);
+    final selSizeText = selectedSize ?? vSizes.first; // ensure non-null
 
-    // build unique color and size lists for the side panels
+    // Unique colors across variants (for right panel swatches)
     final colors = <String>{for (final z in variants) z.color}.toList();
-    final sizes = <String>{for (final z in variants) z.size}.toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -105,18 +95,19 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             _HeroBanner(
               brandText: widget.product.brand,
               images: images,
-              tiltDeg: -18, // same vibe as your HeroArea
+              tiltDeg: -18,
               onPageChanged: (i) => setState(() => currentImage = i),
               currentImage: currentImage,
-              onPickColor: (c) => _selectByColor(c),
+              // pass sizes of CURRENT variant only
+              sizes: vSizes, // <- CHANGED to List<String>
+              selectedSize: selSizeText, // <- String
               onPickSize: (s) => _selectBySize(s),
               colors: colors,
-              sizes: sizes,
               selectedColor: v.color,
-              selectedSize: v.size,
+              onPickColor: (c) => _selectByColor(c),
             ),
 
-            const SizedBox(height: 1),
+            const SizedBox(height: 12),
 
             // ================= TITLE + PRICE =================
             Padding(
@@ -234,7 +225,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  // small UI helper
   Widget _iconBox(String asset) => Container(
     padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
@@ -257,12 +247,12 @@ class _HeroBanner extends StatelessWidget {
     required this.tiltDeg,
     required this.currentImage,
     required this.onPageChanged,
-    required this.onPickColor,
-    required this.onPickSize,
     required this.colors,
-    required this.sizes,
     required this.selectedColor,
-    required this.selectedSize,
+    required this.onPickColor,
+    required this.sizes, // <- List<String>
+    required this.selectedSize, // <- String
+    required this.onPickSize, // <- ValueChanged<String>
   });
 
   final String brandText;
@@ -272,10 +262,11 @@ class _HeroBanner extends StatelessWidget {
   final ValueChanged<int> onPageChanged;
 
   final List<String> colors;
-  final List<String> sizes;
   final String selectedColor;
-  final String selectedSize;
   final ValueChanged<String> onPickColor;
+
+  final List<String> sizes; // <- CHANGED type to List<String>
+  final String selectedSize; // <- CHANGED to String
   final ValueChanged<String> onPickSize;
 
   @override
@@ -300,7 +291,7 @@ class _HeroBanner extends StatelessWidget {
                     (brandText.isEmpty ? 'BRAND' : brandText).toUpperCase(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 300, // scaled by FittedBox
+                      fontSize: 300,
                       fontWeight: FontWeight.w900,
                       fontStyle: FontStyle.italic,
                       letterSpacing: -8,
@@ -365,13 +356,13 @@ class _HeroBanner extends StatelessWidget {
             ),
           ),
 
-          // size chips (left)
+          // size chips (left) — sizes of CURRENT variant
           Positioned(
             left: 18,
             top: 90,
             child: _SizeColumn(
-              sizes: sizes,
-              selectedSize: selectedSize,
+              sizes: sizes, // <- List<String>
+              selectedSize: selectedSize, // <- String
               onPick: onPickSize,
             ),
           ),
@@ -422,8 +413,8 @@ class _SizeColumn extends StatelessWidget {
     required this.onPick,
   });
 
-  final List<String> sizes;
-  final String selectedSize;
+  final List<String> sizes; // <- String list
+  final String selectedSize; // <- String
   final ValueChanged<String> onPick;
 
   @override
@@ -441,13 +432,6 @@ class _SizeColumn extends StatelessWidget {
             width: 1,
           ),
           borderRadius: BorderRadius.circular(14),
-          // boxShadow: const [
-          //   BoxShadow(
-          //     color: Colors.black12,
-          //     blurRadius: 8,
-          //     offset: Offset(0, 2),
-          //   ),
-          // ],
         ),
         child: Text(
           'UK $t',
@@ -496,9 +480,6 @@ class _RightControls extends StatelessWidget {
           width: 1,
         ),
         borderRadius: BorderRadius.circular(12),
-        // boxShadow: const [
-        //   BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2)),
-        // ],
       ),
       child: Container(
         width: 15,
@@ -548,7 +529,7 @@ class _RightControls extends StatelessWidget {
   }
 }
 
-// --- color name -> Color mapper ---
+// color name -> Color mapper
 Color _colorFromName(String name) {
   final s = name.trim().toLowerCase();
   switch (s) {

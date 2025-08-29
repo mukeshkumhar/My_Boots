@@ -71,14 +71,14 @@ class ProductCard extends StatelessWidget {
             ),
             const SizedBox(height: 1),
             Text(
-              product.variants[0].price.toString(),
+              product.name,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             // const SizedBox(height: 0),
             Row(
               children: [
                 Text(
-                  '\$${product.price.toStringAsFixed(2)}',
+                  '\₹${product.price.toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
