@@ -118,4 +118,15 @@ class AuthController extends ChangeNotifier {
     error = e.toString();
     notifyListeners();
   }
+
+  /// Only loads the cached user from secure storage (no API call).
+  Future<void> initFromStorage() async {
+    try {
+      currentUser = await TokenStore.getUser();
+    } catch (_) {
+      currentUser = null;
+    } finally {
+      notifyListeners();
+    }
+  }
 }

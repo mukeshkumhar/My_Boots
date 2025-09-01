@@ -1,7 +1,11 @@
 // lib/core/api_client.dart
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'token_store.dart';
 import 'constants.dart';
+
+Completer<void>? _refreshCompleter;
 
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
@@ -68,11 +72,13 @@ class ApiClient {
       path.contains('/user/login') ||
       path.contains('/user/register') ||
       path.contains('/user/me') ||
-      path.contains('/user/home');
+      path.contains('/user/home') ||
+      path.contains('/user/refresh');
 
   Future<void> _attemptRefreshAndReplay() async {
     if (_refreshing) return;
     _refreshing = true;
+    _refreshCompleter = Completer<void>();
 
     try {
       final refresh = await TokenStore.refreshToken;
@@ -108,6 +114,8 @@ class ApiClient {
       _queue.clear();
     } finally {
       _refreshing = false;
+      _refreshCompleter?.complete();
+      _refreshCompleter = null;
     }
   }
 

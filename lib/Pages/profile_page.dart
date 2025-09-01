@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../User/login.dart';
+import '../core/auth_controller.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthController>();
+    final user = auth.currentUser;
+    final displayName = user?.username ?? user?.contact ?? "Name";
+    final displayEmail = user?.email ?? "Email";
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -20,20 +28,20 @@ class ProfilePage extends StatelessWidget {
                   child: Icon(Icons.person, size: 36),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Mukesh Kumhar",
-                        style: TextStyle(
+                        displayName.toString(),
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        "mukesh@example.com",
+                        displayEmail.toString(),
                         style: TextStyle(color: Colors.black54),
                       ),
                     ],
@@ -59,7 +67,21 @@ class ProfilePage extends StatelessWidget {
             const _Tile(icon: Icons.settings_outlined, title: "Settings"),
             const SizedBox(height: 12),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () async {
+                try {
+                  await auth.doLogout(); // clears tokens + user + notifies
+                } catch (e) {
+                  print("Logout failed $e");
+                }
+
+                if (!context.mounted) return;
+
+                // Hard-redirect to Login and clear the back stack
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (_) => false,
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
