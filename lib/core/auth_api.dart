@@ -1,5 +1,6 @@
 // lib/features/auth/auth_api.dart
 import 'package:dio/dio.dart';
+import 'package:my_boots/models/liked_item.dart';
 import 'package:my_boots/models/products_models.dart';
 import '../models/user_model.dart';
 import 'api_client.dart';
@@ -139,6 +140,53 @@ class AuthApi {
         .whereType<Map>() // ensure each item is a Map
         .map((m) => RemoteProduct.fromJson(Map<String, dynamic>.from(m)))
         .toList();
+  }
+
+  Future<String?> addFavorite({
+    required String productId,
+    required String variantId,
+    required int size,
+  }) async {
+    final res = await _dio.post(
+      '/user/liked', // <- adjust if your route is different
+      data: {'productId': productId, 'variantId': variantId, 'size': size},
+    );
+
+    // Accept { like: { _id: ... } } or { _id: ... } or anything similar
+    final data = res.data;
+    if (data is Map) {
+      if (data['like'] is Map && (data['like']['_id'] != null)) {
+        return data['like']['_id'].toString();
+      }
+      if (data['_id'] != null) return data['_id'].toString();
+    }
+    return null;
+  }
+
+  Future<List<LikedItem>> favorites() async {
+    final res = await _dio.get(
+      '/user/liked',
+    ); // or your actual route, e.g. /user/liked
+    final data = res.data;
+
+    // Accept either { likedProduct: [...] } OR raw list [...]
+    final list =
+        (data is Map && data['likedProduct'] is List)
+            ? data['likedProduct'] as List
+            : (data is List ? data : <dynamic>[]);
+
+    return list
+        .whereType<Map>()
+        .map((m) => LikedItem.fromJson(Map<String, dynamic>.from(m)))
+        .toList();
+  }
+
+  // Remove one like by id
+  Future<void> removeFavorite(String likedId) async {
+    await _dio.delete(
+      '/user/liked',
+      data: {'likedId': likedId}, // matches your backend DELETE route body
+    );
   }
 
   Future<void> logout() async {

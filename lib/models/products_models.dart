@@ -1,6 +1,7 @@
 // lib/models/products_models.dart  (or your features path)
 
 class ProductVariant {
+  final String id;
   final List<String> images;
   final String color;
   final List<String> sizes; // always strings in UI
@@ -9,6 +10,7 @@ class ProductVariant {
   final bool inStock;
 
   ProductVariant({
+    required this.id,
     required this.images,
     required this.color,
     required this.sizes,
@@ -28,6 +30,7 @@ class ProductVariant {
             : <String>[];
 
     return ProductVariant(
+      id: (j['_id'] ?? '').toString(),
       images: (j['images'] as List? ?? []).map((e) => e.toString()).toList(),
       color: (j['color'] ?? '').toString(),
       sizes: sizes,

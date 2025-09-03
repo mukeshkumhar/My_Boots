@@ -4,6 +4,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:my_boots/models/products_models.dart';
 
+import '../core/auth_api.dart';
+
 class ProductDetailsPage extends StatefulWidget {
   final RemoteProduct product;
   const ProductDetailsPage({super.key, required this.product});
@@ -16,6 +18,115 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   int selectedVariant = 0; // which color/variant
   int currentImage = 0; // which image for the variant
   String? selectedSize; // <- NEW: selected size as String
+  bool _wishLoading = false;
+  bool _isWished = false;
+
+  final _api = AuthApi();
+
+  String _extractId(dynamic obj) {
+    if (obj == null) return '';
+    // tries common patterns: id, _id, productId, variantId
+    for (final k in ['id', '_id', 'productId', 'variantId', 'sId']) {
+      final v = (obj as dynamic).toJson?.call()[k] ?? (obj as dynamic)?.$k;
+      if (v != null && v.toString().isNotEmpty) return v.toString();
+    }
+    // Fallbacks for typical field names if your model exposes them directly:
+    try {
+      final v = (obj.id ?? obj._id ?? obj.productId ?? obj.variantId);
+      if (v != null) return v.toString();
+    } catch (_) {}
+    return '';
+  }
+
+  int _parseSizeToInt(String s) {
+    // grabs the first run of digits; "UK 8" -> 8, "8.5" -> 8
+    final m = RegExp(r'\d+').firstMatch(s);
+    return (m != null) ? int.parse(m.group(0)!) : 0;
+  }
+
+  String _productId() {
+    final p = widget.product;
+
+    // 1) Try toJson() map first
+    try {
+      final j = (p as dynamic).toJson?.call();
+      if (j is Map) {
+        for (final k in ['_id', 'id', 'productId']) {
+          final v = j[k];
+          if (v != null && v.toString().isNotEmpty) return v.toString();
+        }
+      }
+    } catch (_) {}
+
+    // 2) Fall back to common direct fields
+    try {
+      final v =
+          (p as dynamic).id ?? (p as dynamic)._id ?? (p as dynamic).productId;
+      if (v != null && v.toString().isNotEmpty) return v.toString();
+    } catch (_) {}
+
+    return '';
+  }
+
+  String _variantIdOf() {
+    final varient = widget.product.variants[selectedVariant];
+
+    if (varient.id.isNotEmpty) {
+      return varient.id;
+    }
+
+    print("Variant ID: $varient");
+    return '';
+  }
+
+  Future<void> _onTapFavorite() async {
+    if (_wishLoading) return;
+    final variants = widget.product.variants;
+    if (variants.isEmpty) return;
+
+    final v = variants[selectedVariant];
+    print("Selected varient $selectedVariant");
+    final productId = _productId();
+    final variantId = _variantIdOf();
+    final sizeText = (selectedSize ?? _sizesOf(v).first).toString();
+    final sizeInt = _parseSizeToInt(sizeText); // <- always an int
+
+    // selectedSize is String (e.g. "8") -> backend expects int
+    // final sizeInt = int.tryParse(selectedSize ?? _sizesOf(v).first);
+
+    if (productId.isEmpty || variantId.isEmpty || sizeInt == 0) {
+      print("ProductID: $productId, $variantId, $sizeInt");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Missing product/variant/size')),
+      );
+      return;
+    }
+
+    setState(() => _wishLoading = true);
+    try {
+      await _api.addFavorite(
+        productId: productId,
+        variantId: variantId,
+        size: sizeInt,
+      );
+      if (mounted) {
+        setState(() => _isWished = true);
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Added to favorites')));
+      }
+    } catch (e) {
+      if (mounted) {
+        print("Error to add favorites: $e");
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _wishLoading = false);
+    }
+  }
 
   // Normalize sizes from variant.size (supports int | String | List)
   List<String> _sizesOf(dynamic variant) {
@@ -105,6 +216,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               colors: colors,
               selectedColor: v.color,
               onPickColor: (c) => _selectByColor(c),
+              isWished: _isWished,
+              loading: _wishLoading,
+              onToggleWish: _onTapFavorite,
             ),
 
             const SizedBox(height: 12),
@@ -253,6 +367,9 @@ class _HeroBanner extends StatelessWidget {
     required this.sizes, // <- List<String>
     required this.selectedSize, // <- String
     required this.onPickSize, // <- ValueChanged<String>
+    required this.isWished, // NEW
+    required this.loading, // NEW
+    required this.onToggleWish,
   });
 
   final String brandText;
@@ -268,6 +385,10 @@ class _HeroBanner extends StatelessWidget {
   final List<String> sizes; // <- CHANGED type to List<String>
   final String selectedSize; // <- CHANGED to String
   final ValueChanged<String> onPickSize;
+
+  final bool isWished; // NEW
+  final bool loading; // NEW
+  final VoidCallback onToggleWish; // NEW
 
   @override
   Widget build(BuildContext context) {
@@ -375,6 +496,9 @@ class _HeroBanner extends StatelessWidget {
               colors: colors,
               selectedColor: selectedColor,
               onPick: onPickColor,
+              isWished: isWished,
+              loading: loading,
+              onToggleWish: onToggleWish,
             ),
           ),
 
@@ -462,11 +586,18 @@ class _RightControls extends StatelessWidget {
     required this.colors,
     required this.selectedColor,
     required this.onPick,
+    required this.isWished,
+    required this.loading,
+    required this.onToggleWish,
   });
 
   final List<String> colors;
   final String selectedColor;
   final ValueChanged<String> onPick;
+
+  final bool isWished; // NEW
+  final bool loading; // NEW
+  final VoidCallback onToggleWish;
 
   Widget _swatch(Color c, bool selected, VoidCallback onTap) => GestureDetector(
     onTap: onTap,
@@ -497,21 +628,35 @@ class _RightControls extends StatelessWidget {
     return Column(
       children: [
         // bookmark
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: Colors.black12),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
+        InkWell(
+          onTap: loading ? null : onToggleWish,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.black12),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child:
+                loading
+                    ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : Icon(
+                      isWished ? Icons.favorite : Icons.favorite_border,
+                      size: 20,
+                      color: isWished ? Colors.red : Colors.black,
+                    ),
           ),
-          child: const Icon(Icons.bookmark_border, size: 20),
         ),
         const SizedBox(height: 80),
         const Text(
