@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:my_boots/core/auth_api.dart';
 import 'package:my_boots/models/cart_item.dart';
 
+import '../ServicesPage/checkout_page.dart';
+
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
 
@@ -94,31 +96,42 @@ class _CartPageState extends State<CartPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refresh,
-          child: FutureBuilder<List<CartItem>>(
-            future: _future,
-            builder: (context, snap) {
-              // Loading state must be scrollable for pull-to-refresh
-              if (snap.connectionState == ConnectionState.waiting) {
-                return ListView(
+    // ⬇️ Move Scaffold *inside* FutureBuilder so totals are in scope
+    return FutureBuilder<List<CartItem>>(
+      future: _future,
+      builder: (context, snap) {
+        // Loading
+        if (snap.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            body: SafeArea(
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: const [
                     SizedBox(height: 120),
                     Center(child: CircularProgressIndicator()),
                   ],
-                );
-              }
-              if (snap.hasError) {
-                return ListView(
+                ),
+              ),
+            ),
+          );
+        }
+
+        // Error
+        if (snap.hasError) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            body: SafeArea(
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   children: [
                     const SizedBox(height: 120),
-                    Icon(
+                    const Icon(
                       Icons.error_outline,
                       size: 48,
                       color: Colors.redAccent,
@@ -133,12 +146,22 @@ class _CartPageState extends State<CartPage> {
                       ),
                     ),
                   ],
-                );
-              }
+                ),
+              ),
+            ),
+          );
+        }
 
-              final items = snap.data ?? <CartItem>[];
-              if (items.isEmpty) {
-                return ListView(
+        final items = snap.data ?? <CartItem>[];
+
+        // Empty
+        if (items.isEmpty) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            body: SafeArea(
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: const [
                     SizedBox(height: 120),
@@ -150,15 +173,24 @@ class _CartPageState extends State<CartPage> {
                     SizedBox(height: 12),
                     Center(child: Text('Your cart is empty')),
                   ],
-                );
-              }
+                ),
+              ),
+            ),
+          );
+        }
 
-              final subtotal = _subtotal(items);
-              const shipping = 99; // if you have this from backend, use that
-              const tax = 0;
-              final total = subtotal + shipping + tax;
+        // Success
+        final subtotal = _subtotal(items);
+        const shipping = 99; // use backend value if available
+        const tax = 0;
+        final total = subtotal + shipping + tax;
 
-              return ListView(
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(
+            child: RefreshIndicator(
+              onRefresh: _refresh,
+              child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
                 children: [
@@ -274,32 +306,42 @@ class _CartPageState extends State<CartPage> {
                   _RowPrice(label: 'Total', value: _price(total), bold: true),
                   const SizedBox(height: 90), // bottom button space
                 ],
-              );
-            },
-          ),
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                // TODO: navigate to checkout
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: const StadiumBorder(),
               ),
-              child: const Text('Proceed to Checkout'),
             ),
           ),
-        ),
-      ),
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (_) => CheckoutPage(
+                              subtotal: subtotal,
+                              shipping: shipping,
+                              tax: tax,
+                              total: total,
+                            ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: const StadiumBorder(),
+                  ),
+                  child: const Text('Proceed to Checkout'),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

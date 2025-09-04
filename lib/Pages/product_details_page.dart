@@ -20,6 +20,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   String? selectedSize; // <- NEW: selected size as String
   bool _wishLoading = false;
   bool _isWished = false;
+  bool _cartLoading = false;
 
   final _api = AuthApi();
 
@@ -125,6 +126,50 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       }
     } finally {
       if (mounted) setState(() => _wishLoading = false);
+    }
+  }
+
+  Future<void> _onTapAddToCart() async {
+    if (_cartLoading) return;
+
+    final variants = widget.product.variants;
+    if (variants.isEmpty) return;
+
+    final v = variants[selectedVariant];
+    final productId = _productId();
+    final variantId = _variantIdOf();
+    final sizeText = (selectedSize ?? _sizesOf(v).first).toString();
+    final sizeInt = _parseSizeToInt(sizeText);
+    const quantity = 1; // you can change to a chosen qty later
+
+    if (productId.isEmpty || variantId.isEmpty || sizeInt == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Missing product/variant/size')),
+      );
+      return;
+    }
+
+    setState(() => _cartLoading = true);
+    try {
+      await _api.addToCart(
+        productId: productId,
+        variantId: variantId,
+        size: sizeInt,
+        quantity: quantity,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Added to cart')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add to cart: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _cartLoading = false);
     }
   }
 
@@ -325,7 +370,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: v.inStock ? () {} : null,
+                      onPressed:
+                          v.inStock
+                              ? (_cartLoading ? null : _onTapAddToCart)
+                              : null,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         backgroundColor: Colors.black,

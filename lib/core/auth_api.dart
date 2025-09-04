@@ -199,6 +199,33 @@ class AuthApi {
     }
   }
 
+  Future<String?> addToCart({
+    required String productId,
+    required String variantId,
+    required int size,
+    int quantity = 1,
+  }) async {
+    final res = await _dio.post(
+      '/user/cart', // <-- adjust if your route differs
+      data: {
+        'productId': productId,
+        'variantId': variantId,
+        'size': size,
+        'quantity': quantity,
+      },
+    );
+
+    final data = res.data;
+    if (data is Map) {
+      // Accept { cart: { _id: ... } } or { _id: ... }
+      if (data['cart'] is Map && (data['cart']['_id'] != null)) {
+        return data['cart']['_id'].toString();
+      }
+      if (data['_id'] != null) return data['_id'].toString();
+    }
+    return null;
+  }
+
   // GET /user/cart -> { cart: [ ... ] } or [ ... ]
   Future<List<CartItem>> cart() async {
     final res = await _dio.get('/user/cart');
