@@ -102,7 +102,7 @@ class ApiClient {
           final res = await dio.fetch(newReq);
           q.handler.resolve(res);
         } catch (err) {
-          q.handler.next(err as DioError);
+          q.handler.next(err as DioException);
         }
       }
     } catch (_) {
@@ -144,9 +144,9 @@ class QueuedRequest {
   final ErrorInterceptorHandler handler;
   QueuedRequest(this.requestOptions, this.handler);
 
-  DioError asUnauthorized() => DioError(
+  DioException asUnauthorized() => DioException(
     requestOptions: requestOptions,
     response: Response(requestOptions: requestOptions, statusCode: 401),
-    type: DioErrorType.badResponse,
+    type: DioExceptionType.badResponse,
   );
 }

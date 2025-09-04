@@ -1,5 +1,6 @@
 // lib/features/auth/auth_api.dart
 import 'package:dio/dio.dart';
+import 'package:my_boots/models/cart_item.dart';
 import 'package:my_boots/models/liked_item.dart';
 import 'package:my_boots/models/products_models.dart';
 import '../models/user_model.dart';
@@ -196,5 +197,36 @@ class AuthApi {
     } finally {
       await TokenStore.clear();
     }
+  }
+
+  // GET /user/cart -> { cart: [ ... ] } or [ ... ]
+  Future<List<CartItem>> cart() async {
+    final res = await _dio.get('/user/cart');
+    final data = res.data;
+    final list =
+        (data is Map && data['cart'] is List)
+            ? data['cart'] as List
+            : (data is List ? data : <dynamic>[]);
+    return list
+        .whereType<Map>()
+        .map((m) => CartItem.fromJson(Map<String, dynamic>.from(m)))
+        .toList();
+  }
+
+  // PATCH /user/cart -> update quantity
+  // Body assumption: { cartId, quantity }
+  Future<void> updateCartQty({
+    required String cartId,
+    required int quantity,
+  }) async {
+    await _dio.patch(
+      '/user/cart',
+      data: {'cartId': cartId, 'quantity': quantity},
+    );
+  }
+
+  // DELETE /user/cart -> remove by cartId
+  Future<void> removeFromCart(String cartId) async {
+    await _dio.delete('/user/cart', data: {'cartId': cartId});
   }
 }

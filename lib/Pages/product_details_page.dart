@@ -305,14 +305,21 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed:
+                          _wishLoading
+                              ? null
+                              : () {
+                                _onTapFavorite();
+                              },
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: const BorderSide(color: Colors.black),
                         shape: const StadiumBorder(),
                         foregroundColor: Colors.black,
                       ),
-                      child: const Text('Add to wishlist'),
+                      child: Text(
+                        _isWished ? 'Added to wishlist' : 'Add to wishlist',
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
